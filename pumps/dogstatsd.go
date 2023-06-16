@@ -49,7 +49,7 @@ type DogStatsdConf struct {
 	// List of tags to be added to the metric. The possible options are listed in the below example.
 	//
 	// If no tag is specified the fallback behavior is to use the below tags:
-	// - `path`
+	// - `path` - Note that this tag can generate significant charges in Datadog due to its unbound nature
 	// - `method`
 	// - `response_code`
 	// - `api_version`
@@ -58,6 +58,7 @@ type DogStatsdConf struct {
 	// - `org_id`
 	// - `tracked`
 	// - `oauth_id`
+	// - `latency`
 	//
 	// Note that this configuration can generate significant charges due to the unbound nature of
 	// the `path` tag.
@@ -82,7 +83,9 @@ type DogStatsdConf struct {
 	//       "org_id",
 	//       "tracked",
 	//       "path",
-	//       "oauth_id"
+	//       "oauth_id",
+	//       "latency",
+	//	     "geo"
 	//     ]
 	//   }
 	// },
@@ -237,6 +240,12 @@ func (s *DogStatsdPump) WriteData(ctx context.Context, data []interface{}) error
 						continue
 					}
 					value = "oauth_id:" + decoded.OauthID
+				case "latency_total":
+					value = fmt.Sprintf("latency_total: %d", decoded.Latency.Total)
+				case "latency_upstream":
+					value = fmt.Sprintf("latency_upstream: %d", decoded.Latency.Upstream)
+				case "api_key":
+					value = decoded.APIKey
 				default:
 					return fmt.Errorf("undefined tag '%s'", tag)
 				}
